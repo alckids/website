@@ -65,6 +65,15 @@ if (mobileMenuBtn) {
         navMenu.classList.toggle('active');
         mobileMenuBtn.classList.toggle('active');
     });
+
+    // メニュー内のリンクをクリックしたら自動でメニューを閉じる
+    const navLinks = navMenu.querySelectorAll('a');
+    navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            navMenu.classList.remove('active');
+            mobileMenuBtn.classList.remove('active');
+        });
+    });
 }
 
 // フォーム送信
@@ -283,39 +292,6 @@ window.addEventListener('load', () => {
     document.body.classList.add('loaded');
 });
 
-// レスポンシブメニューのスタイル追加
-const mobileMenuStyle = document.createElement('style');
-mobileMenuStyle.textContent = `
-    @media (max-width: 768px) {
-        .nav-menu.active {
-            display: flex;
-            flex-direction: column;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            padding: 24px;
-            gap: 16px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-            animation: slideDown 0.3s ease-out;
-        }
-        
-        .mobile-menu-btn.active span:nth-child(1) {
-            transform: rotate(45deg) translateY(10px);
-        }
-        
-        .mobile-menu-btn.active span:nth-child(2) {
-            opacity: 0;
-        }
-        
-        .mobile-menu-btn.active span:nth-child(3) {
-            transform: rotate(-45deg) translateY(-10px);
-        }
-    }
-`;
-document.head.appendChild(mobileMenuStyle);
-
 // イベント画像アップロード機能
 let eventIdCounter = 4; // サンプルイベントの次のID
 
@@ -522,6 +498,9 @@ function removeEventFromLocalStorage(id) {
 
 // ページ読み込み時に保存されたイベントを復元
 window.addEventListener('load', () => {
+    // 対象の要素がページ内に存在しない場合は処理をストップしてエラーを防ぐ
+    if (!eventsGallery) return;
+
     const events = JSON.parse(localStorage.getItem('events') || '[]');
     events.forEach(event => {
         const eventCard = document.createElement('div');
