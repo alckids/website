@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://あなたのURL.com/sitemap.xml
+Sitemap: https://alckids.github.io/website/sitemap.xml
