@@ -12,7 +12,7 @@
     const CONFIG = {
         SCROLL_THRESHOLD: 50,     // ヘッダーのスタイルが変わるスクロール量
         THROTTLE_WAIT: 100,       // スクロールイベントの間引き時間(ms)
-        HEADER_OFFSET_ADJUST: 10  // スムーススクロール時の余白微調整
+        HEADER_OFFSET_ADJUST: -50  // スムーススクロール時の余白微調整
     };
 
     // ==========================================
@@ -121,9 +121,45 @@
         if (!el.trialForm) return;
 
         el.trialForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            alert('無料体験レッスンのお申し込みを受け付けました。\n担当者より2営業日以内にご連絡させていただきます。');
-            el.trialForm.reset();
+            e.preventDefault(); // デフォルトの送信をストップ
+
+            // ★ここに先ほどコピーしたGASの「ウェブアプリのURL」を貼り付けます
+            const gasUrl = 'https://script.google.com/macros/s/AKfycbwRGbRDxxBe-s6qjB1Rspw_yAkYkmhX5VrnMfjOqwh3cAdjkn0M-U49z4ZRFZWlHKlc/exec';
+
+            // 送信ボタンを連打できないように「送信中」にする
+            const submitBtn = el.trialForm.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = '送信中...';
+
+            // フォームのデータをまとめる
+            const formData = new FormData(el.trialForm);
+            // GASが受け取りやすい形式に変換
+            const data = new URLSearchParams();
+            for (const pair of formData) {
+                data.append(pair[0], pair[1]);
+            }
+
+            // GASへデータを送信
+            fetch(gasUrl, {
+                method: 'POST',
+                body: data,
+            })
+            .then(response => {
+                // 送信成功時
+                alert('無料体験レッスンのお申し込みを受け付けました。\n担当者より3営業日以内にご連絡させていただきます。');
+                el.trialForm.reset(); // フォームを空にする
+            })
+            .catch(error => {
+                // 送信失敗時
+                console.error('Error:', error);
+                alert('通信エラーが発生しました。時間をおいて再度お試しいただくか、直接メールでお問い合わせください。');
+            })
+            .finally(() => {
+                // ボタンを元の状態に戻す
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalBtnText;
+            });
         });
     }
 
