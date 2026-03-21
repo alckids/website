@@ -36,6 +36,7 @@
         setupSmoothScroll();
         setupHeaderScroll();
         setupForm();
+        setupEventSliders();
     }
 
     // ==========================================
@@ -160,6 +161,85 @@
                 submitBtn.disabled = false;
                 submitBtn.textContent = originalBtnText;
             });
+        });
+    }
+
+    // ==========================================
+    // イベントフォトスライダー
+    // ==========================================
+
+    /**
+     * 各イベントグループのスライダー制御
+     * PC: 3枚表示 / タブレット: 2枚表示 / スマホ: 1枚表示
+     */
+    function setupEventSliders() {
+        const GAP = 20; // カード間の余白(px)
+
+        document.querySelectorAll('.p-events__slider').forEach(sliderEl => {
+            const track = sliderEl.querySelector('.p-events__slider-track');
+            const cards = Array.from(track.querySelectorAll('.p-events__card'));
+            const wrap = sliderEl.closest('.p-events__slider-wrap');
+            const prevBtn = wrap.querySelector('.p-events__slider-btn--prev');
+            const nextBtn = wrap.querySelector('.p-events__slider-btn--next');
+            const dotsContainer = wrap.querySelector('.p-events__slider-dots');
+            let currentPage = 0;
+
+            function getSpv() {
+                if (window.innerWidth >= 900) return 3;
+                if (window.innerWidth >= 560) return 2;
+                return 1;
+            }
+
+            function setup() {
+                const spv = getSpv();
+                const containerWidth = sliderEl.offsetWidth;
+                const cardWidth = (containerWidth - GAP * (spv - 1)) / spv;
+
+                track.style.gap = GAP + 'px';
+                cards.forEach(card => { card.style.width = cardWidth + 'px'; });
+
+                const totalPages = Math.ceil(cards.length / spv);
+                dotsContainer.innerHTML = '';
+                for (let i = 0; i < totalPages; i++) {
+                    const dot = document.createElement('button');
+                    dot.className = 'p-events__slider-dot';
+                    dot.setAttribute('aria-label', (i + 1) + 'ページ目');
+                    dot.addEventListener('click', () => goTo(i));
+                    dotsContainer.appendChild(dot);
+                }
+                currentPage = 0;
+                goTo(0);
+            }
+
+            function goTo(page) {
+                const spv = getSpv();
+                const totalPages = Math.ceil(cards.length / spv);
+                currentPage = Math.max(0, Math.min(page, totalPages - 1));
+                const containerWidth = sliderEl.offsetWidth;
+                // 1ページ分の移動量 = カード幅×spv + GAP×spv = containerWidth + GAP
+                track.style.transform = `translateX(-${currentPage * (containerWidth + GAP)}px)`;
+                dotsContainer.querySelectorAll('.p-events__slider-dot').forEach((d, i) => {
+                    d.classList.toggle('is-active', i === currentPage);
+                });
+                prevBtn.disabled = currentPage === 0;
+                nextBtn.disabled = currentPage >= totalPages - 1;
+            }
+
+            prevBtn.addEventListener('click', () => goTo(currentPage - 1));
+            nextBtn.addEventListener('click', () => goTo(currentPage + 1));
+
+            // タッチスワイプ対応
+            let touchStartX = 0;
+            sliderEl.addEventListener('touchstart', e => {
+                touchStartX = e.touches[0].clientX;
+            }, { passive: true });
+            sliderEl.addEventListener('touchend', e => {
+                const diff = touchStartX - e.changedTouches[0].clientX;
+                if (Math.abs(diff) > 50) goTo(currentPage + (diff > 0 ? 1 : -1));
+            });
+
+            setup();
+            window.addEventListener('resize', throttle(setup, CONFIG.THROTTLE_WAIT));
         });
     }
 
