@@ -820,17 +820,42 @@
                 <h2 class="p-trial__title">無料体験レッスンのお申し込み</h2>
                 <p class="p-trial__lead">実際のレッスンを体験し、教室の雰囲気や講師との相性をご確認ください。約1分で入力完了します。</p>
                 <form class="p-trial__form" id="trialForm">
+                    <fieldset class="c-form-fieldset">
+                        <legend class="c-form-legend">お子様について</legend>
+                        <div class="c-form-group">
+                            <label for="childName" class="c-form-label">お名前 <span class="c-form-required">必須</span></label>
+                            <input type="text" id="childName" name="childName" class="c-form-input" required placeholder="例：山田　太郎">
+                        </div>
+                        <div class="c-form-group">
+                            <label for="childNameKana" class="c-form-label">ふりがな <span class="c-form-required">必須</span></label>
+                            <input type="text" id="childNameKana" name="childNameKana" class="c-form-input" required placeholder="例：やまだ　たろう">
+                        </div>
+                        <div class="c-form-group">
+                            <label class="c-form-label">性別 <span class="c-form-optional">任意</span></label>
+                            <div class="c-form-radio-group">
+                                <label class="c-form-radio-label">
+                                    <input type="radio" name="childGender" value="male"> 男の子
+                                </label>
+                                <label class="c-form-radio-label">
+                                    <input type="radio" name="childGender" value="female"> 女の子
+                                </label>
+                                <label class="c-form-radio-label">
+                                    <input type="radio" name="childGender" value="no_answer"> 答えたくない
+                                </label>
+                            </div>
+                        </div>
+                        <div class="c-form-group">
+                            <label for="childBirthdate" class="c-form-label">生年月日 <span class="c-form-required">必須</span></label>
+                            <input type="date" id="childBirthdate" name="childBirthdate" class="c-form-input" required>
+                        </div>
+                        <div class="c-form-group">
+                            <label for="childEnglishHistory" class="c-form-label">英語学習歴 <span class="c-form-required">必須</span></label>
+                            <input type="text" id="childEnglishHistory" name="childEnglishHistory" class="c-form-input" required placeholder="例：英語学習経験なし、英会話スクール2年など">
+                        </div>
+                    </fieldset>
                     <div class="c-form-group">
                         <label for="parentName" class="c-form-label">保護者様のお名前 <span class="c-form-required">必須</span></label>
                         <input type="text" id="parentName" name="parentName" class="c-form-input" required autocomplete="name">
-                    </div>
-                    <div class="c-form-group">
-                        <label for="childName" class="c-form-label">お子様のお名前 <span class="c-form-required">必須</span></label>
-                        <input type="text" id="childName" name="childName" class="c-form-input" required>
-                    </div>
-                    <div class="c-form-group">
-                        <label for="childEnglishHistory" class="c-form-label">お子様の英語学習歴 <span class="c-form-required">必須</span></label>
-                        <input type="text" id="childEnglishHistory" name="childEnglishHistory" class="c-form-input" required placeholder="例：英語学習経験なし、英会話スクール2年など">
                     </div>
                     <div class="c-form-group">
                         <label for="email" class="c-form-label">メールアドレス <span class="c-form-required">必須</span></label>
