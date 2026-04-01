@@ -125,7 +125,7 @@
             e.preventDefault(); // デフォルトの送信をストップ
 
             // ★ここに先ほどコピーしたGASの「ウェブアプリのURL」を貼り付けます
-            const gasUrl = 'https://script.google.com/macros/s/AKfycbwRGbRDxxBe-s6qjB1Rspw_yAkYkmhX5VrnMfjOqwh3cAdjkn0M-U49z4ZRFZWlHKlc/exec';
+            const gasUrl = 'https://script.google.com/macros/s/AKfycbxKBxBIS6T6W9yABRUBeHgIJUyPzGlYWtoOoofiTTvJf01XCbsXXIKrVI72UtSigS1A/exec';
 
             // 送信ボタンを連打できないように「送信中」にする
             const submitBtn = el.trialForm.querySelector('button[type="submit"]');
