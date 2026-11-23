@@ -5,6 +5,7 @@
 // ▼ 設定項目 ▼ --------------------------------------------------------
 const ADMIN_EMAIL   = 'alckids2018@gmail.com'; // 通知先メールアドレス
 const SHEET_NAME    = '申込一覧';               // スプレッドシートのシート名
+const SPREADSHEET_ID = '';                      // バインド済みの場合は空欄で可
 // -----------------------------------------------------------------------
 
 /**
@@ -12,7 +13,34 @@ const SHEET_NAME    = '申込一覧';               // スプレッドシート�
  */
 function doPost(e) {
   try {
-    const p = e.parameter;
+    const p = (e && e.parameter) || {};
+    p.childName = trimValue(p.childName);
+    p.childNameKana = trimValue(p.childNameKana);
+    p.childBirthdate = trimValue(p.childBirthdate);
+    p.childEnglishHistory = trimValue(p.childEnglishHistory);
+    p.parentName = trimValue(p.parentName);
+    p.email = trimValue(p.email).toLowerCase();
+    p.course = trimValue(p.course);
+    p.message = trimValue(p.message);
+
+    const requiredFields = [
+      ['childName', 'お子様のお名前'],
+      ['childNameKana', 'ふりがな'],
+      ['childBirthdate', '生年月日'],
+      ['childEnglishHistory', '英語学習歴'],
+      ['parentName', '保護者様のお名前'],
+      ['email', 'メールアドレス'],
+      ['course', 'ご希望のコース'],
+    ];
+    const missing = requiredFields
+      .filter(([key]) => !p[key])
+      .map(([, label]) => label);
+    if (missing.length) {
+      return buildResponse({ result: 'error', message: `未入力項目があります: ${missing.join('、')}` });
+    }
+    if (!isValidEmail(p.email)) {
+      return buildResponse({ result: 'error', message: 'メールアドレスの形式が正しくありません' });
+    }
 
     // 性別の値を日本語に変換
     const genderMap = { male: '男の子', female: '女の子', no_answer: '答えたくない' };
@@ -44,7 +72,7 @@ function doPost(e) {
     });
 
     // ── 2. 管理者へ通知メール ──────────────────────────────────────────
-    sendAdminNotification({
+    const adminSent = sendAdminNotification({
       now, childName: p.childName, childNameKana: p.childNameKana,
       gender, childBirthdate: p.childBirthdate,
       childEnglishHistory: p.childEnglishHistory,
@@ -53,13 +81,17 @@ function doPost(e) {
     });
 
     // ── 3. 申込者へ自動返信メール ──────────────────────────────────────
-    sendConfirmationEmail({
+    const confirmationSent = sendConfirmationEmail({
       email: p.email, parentName: p.parentName,
       childName: p.childName, course,
     });
 
     // 成功レスポンス（CORSヘッダー付き）
-    return buildResponse({ result: 'success' });
+    return buildResponse({
+      result: adminSent && confirmationSent ? 'success' : 'partial',
+      adminSent,
+      confirmationSent,
+    });
 
   } catch (err) {
     console.error(err);
@@ -67,11 +99,24 @@ function doPost(e) {
   }
 }
 
+function trimValue(value) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
 // ============================================================
 // スプレッドシートへ保存
 // ============================================================
 function saveToSheet(data) {
-  const ss    = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = SPREADSHEET_ID
+    ? SpreadsheetApp.openById(SPREADSHEET_ID)
+    : SpreadsheetApp.getActiveSpreadsheet();
+  if (!ss) {
+    throw new Error('スプレッドシートを開けません。GASをスプレッドシートに紐付けるか、SPREADSHEET_IDを設定してください');
+  }
   let   sheet = ss.getSheetByName(SHEET_NAME);
 
   // シートがなければ新規作成してヘッダーを書く
@@ -132,7 +177,16 @@ function sendAdminNotification(d) {
   ${Utilities.formatDate(d.now, 'Asia/Tokyo', 'yyyy/MM/dd HH:mm:ss')}
 `.trim();
 
-  GmailApp.sendEmail(ADMIN_EMAIL, subject, body);
+  try {
+    GmailApp.sendEmail(ADMIN_EMAIL, subject, body, {
+      name: 'アルクKiddyCAT市川菅野',
+    });
+    console.log(`管理者通知メール送信完了: ${ADMIN_EMAIL}`);
+    return true;
+  } catch (err) {
+    console.error(`管理者通知メール送信失敗: ${err.message}`);
+    return false;
+  }
 }
 
 // ============================================================
@@ -164,7 +218,17 @@ ${d.parentName} 様
 ─────────────────────────────
 `.trim();
 
-  GmailApp.sendEmail(d.email, subject, body);
+  try {
+    GmailApp.sendEmail(d.email, subject, body, {
+      name: 'アルクKiddyCAT市川菅野',
+      replyTo: ADMIN_EMAIL,
+    });
+    console.log(`申込者への自動返信送信完了: ${d.email}`);
+    return true;
+  } catch (err) {
+    console.error(`申込者への自動返信送信失敗: ${d.email}: ${err.message}`);
+    return false;
+  }
 }
 
 // ============================================================

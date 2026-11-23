@@ -142,14 +142,18 @@
             }
 
             // GASへデータを送信
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 20000);
             fetch(gasUrl, {
                 method: 'POST',
                 mode: 'no-cors',
                 body: data,
+                signal: controller.signal,
             })
             .then(() => {
-                // GASの応答はCORS制限で確認できないため、フォーム内容は保持する
-                alert('お申し込みの送信リクエストを送信しました。受付結果は受付完了メールでご確認ください。メールが届かない場合は、迷惑メールフォルダをご確認のうえ、直接メールでお問い合わせください。');
+                // GASの応答はno-corsでは読めないため、ブラウザ側ではリクエスト完了のみ確認する
+                el.trialForm.reset();
+                alert('お申し込みを送信しました。受付完了メールが届かない場合は、迷惑メールフォルダをご確認のうえ、直接メールでお問い合わせください。');
             })
             .catch(error => {
                 // 送信失敗時
@@ -157,6 +161,7 @@
                 alert('通信エラーが発生しました。時間をおいて再度お試しいただくか、直接メールでお問い合わせください。');
             })
             .finally(() => {
+                clearTimeout(timeoutId);
                 // ボタンを元の状態に戻す
                 submitBtn.disabled = false;
                 submitBtn.textContent = originalBtnText;
