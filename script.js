@@ -122,50 +122,36 @@
         if (!el.trialForm) return;
 
         el.trialForm.addEventListener('submit', (e) => {
-            e.preventDefault(); // デフォルトの送信をストップ
+            e.preventDefault();
 
-            // ★ここに先ほどコピーしたGASの「ウェブアプリのURL」を貼り付けます
-            const gasUrl = 'https://script.google.com/macros/s/AKfycbxKBxBIS6T6W9yABRUBeHgIJUyPzGlYWtoOoofiTTvJf01XCbsXXIKrVI72UtSigS1A/exec';
-
-            // 送信ボタンを連打できないように「送信中」にする
-            const submitBtn = el.trialForm.querySelector('button[type="submit"]');
-            const originalBtnText = submitBtn.textContent;
-            submitBtn.disabled = true;
-            submitBtn.textContent = '送信中...';
-
-            // フォームのデータをまとめる
             const formData = new FormData(el.trialForm);
-            // GASが受け取りやすい形式に変換
-            const data = new URLSearchParams();
-            for (const pair of formData) {
-                data.append(pair[0], pair[1]);
-            }
+            const courseMap = {
+                preschool: '4〜5歳コース',
+                elementary: '小学生コース',
+                junior_high: '中学生コース',
+            };
+            const genderMap = {
+                male: '男の子',
+                female: '女の子',
+                no_answer: '答えたくない',
+            };
+            const body = [
+                '無料体験レッスンのお申し込み',
+                '',
+                `お子様のお名前：${formData.get('childName') || ''}`,
+                `ふりがな：${formData.get('childNameKana') || ''}`,
+                `性別：${genderMap[formData.get('childGender')] || '未回答'}`,
+                `生年月日：${formData.get('childBirthdate') || ''}`,
+                `英語学習歴：${formData.get('childEnglishHistory') || ''}`,
+                `保護者様のお名前：${formData.get('parentName') || ''}`,
+                `メールアドレス：${formData.get('email') || ''}`,
+                `ご希望のコース：${courseMap[formData.get('course')] || ''}`,
+                `ご質問・ご要望：${formData.get('message') || '（なし）'}`,
+            ].join('\n');
 
-            // GASへデータを送信
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 20000);
-            fetch(gasUrl, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: data,
-                signal: controller.signal,
-            })
-            .then(() => {
-                // GASの応答はno-corsでは読めないため、ブラウザ側ではリクエスト完了のみ確認する
-                el.trialForm.reset();
-                alert('お申し込みを送信しました。受付完了メールが届かない場合は、迷惑メールフォルダをご確認のうえ、直接メールでお問い合わせください。');
-            })
-            .catch(error => {
-                // 送信失敗時
-                console.error('Error:', error);
-                alert('通信エラーが発生しました。時間をおいて再度お試しいただくか、直接メールでお問い合わせください。');
-            })
-            .finally(() => {
-                clearTimeout(timeoutId);
-                // ボタンを元の状態に戻す
-                submitBtn.disabled = false;
-                submitBtn.textContent = originalBtnText;
-            });
+            const subject = encodeURIComponent('【無料体験申込】');
+            const mailBody = encodeURIComponent(body);
+            window.location.href = `mailto:alckids2018@gmail.com?subject=${subject}&body=${mailBody}`;
         });
     }
 
